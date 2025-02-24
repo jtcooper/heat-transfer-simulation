@@ -37,3 +37,30 @@ PANEL_EFFICIENCY=0.6 \
 DURATION_HOURS=1 \
 ./heat-transfer-simulation
 ```
+
+## Design considerations
+
+This simple solution involves two systems:
+* Solar panel
+* Storage tank
+
+I chose to ignore the pipes, so heat transfer occurs directly between the solar panel and storage tank (considerations: pipe length, varying insulation through walls or exposed pipes)
+
+There are a lot of heat components that could have been considered in this simulation. For simplicity, I just chose a few:
+* Solar panel:
+  * Incident solar radiation
+  * Convection heat loss to the ambient environment
+  * Heat transfer to and from the storage tank
+* Storage tank:
+  * Convection heat loss to the ambient environment
+  * Heat transfer to and from the solar panel
+
+I assumed the panel is in an outdoor environment and the storage tank is in an indoor environment. This means only the solar panel is exposed to solar irradiance, and they use different parameters for convection.
+
+Considerations:
+* I chose to ignore conduction heat loss through walls, touching objects, etc.
+* Each system has uniform temperature, ignoring components such as thermal stratification in the storage tank.
+* I chose to ignore heat loss due to radiation. The temperature differences are fairly small so this would not have been impactful.
+* Solar irradiance typically varies throughout the day, but I chose to keep it constant for simplicity.
+* The water flow from the pump is set to a constant rate that's applied to the entire system.
+* The focus of this exercise is heat transfer, so I ignored other components such as pressure.
