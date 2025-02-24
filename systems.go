@@ -80,7 +80,7 @@ func (fs *fluidSystem) reset() {
 
 func (fs *fluidSystem) step() {
 	for _, comp := range fs.heatInComponents {
-		if heatComp, ok := comp.(heatComponent); ok {
+		if heatComp, ok := comp.(IHeatComponent); ok {
 			q := heatComp.getHeat()
 			fs.stepHeatIn = append(fs.stepHeatIn, q)
 			fs.addDataPoint(heatComp.getName(), q)
@@ -88,7 +88,7 @@ func (fs *fluidSystem) step() {
 	}
 
 	for _, comp := range fs.heatOutComponents {
-		if heatComp, ok := comp.(heatComponent); ok {
+		if heatComp, ok := comp.(IHeatComponent); ok {
 			q := heatComp.getHeat()
 			fs.stepHeatOut = append(fs.stepHeatOut, q)
 			fs.addDataPoint(heatComp.getName(), q)

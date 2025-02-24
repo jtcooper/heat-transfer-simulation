@@ -101,7 +101,7 @@ func main() {
 	for name, series := range systemsSeries {
 		line.AddSeries(name, series)
 	}
-	plotLine(line, "temperatureSeries.html")
+	plotLine(line, "TemperatureSeries.html")
 
 	// plot the results for each system's power values
 	for _, sys := range systems {

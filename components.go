@@ -20,8 +20,8 @@ func (c component) getName() string {
 	return c.name
 }
 
-// heatComponent defines a method for getting heat rate
-type heatComponent interface {
+// IHeatComponent defines a method for getting heat rate
+type IHeatComponent interface {
 	IComponent
 	getHeat() (heat float64)
 }
@@ -65,7 +65,7 @@ func (c heatCapacityFluidComponent) getHeat() float64 {
 }
 
 // transferHeatComponentWrapper is more complex than a simple component.
-// It wraps a heatComponent and can be used to transfer heat to another system
+// It wraps an IHeatComponent and can be used to transfer heat to another system
 type transferHeatComponentWrapper struct {
 	component
 	wrappedComponent IComponent
@@ -73,7 +73,7 @@ type transferHeatComponentWrapper struct {
 }
 
 func (oc transferHeatComponentWrapper) getHeat() float64 {
-	if hc, ok := oc.wrappedComponent.(heatComponent); ok {
+	if hc, ok := oc.wrappedComponent.(IHeatComponent); ok {
 		return hc.getHeat()
 	} else {
 		panic("getHeat called for non-heatComponent")
