@@ -41,7 +41,7 @@ DURATION_HOURS=1 \
 ## Design considerations
 
 This simple solution involves two systems:
-* Solar panel
+* Solar panel (solar water collector)
 * Storage tank
 
 I chose to ignore the pipes, so heat transfer occurs directly between the solar panel and storage tank (considerations: pipe length, varying insulation through walls or exposed pipes)
@@ -57,7 +57,7 @@ There are a lot of heat components that could have been considered in this simul
 
 I assumed the panel is in an outdoor environment and the storage tank is in an indoor environment. This means only the solar panel is exposed to solar irradiance, and they use different parameters for convection.
 
-Considerations:
+Some other considerations:
 * I chose to ignore conduction heat loss through walls, touching objects, etc.
 * Each system has uniform temperature, ignoring components such as thermal stratification in the storage tank.
 * I chose to ignore heat loss due to radiation. The temperature differences are fairly small so this would not have been impactful.

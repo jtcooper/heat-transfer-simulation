@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// default values can be overriden with environment variables
+// Default values. These can be overriden with environment variables
 const (
 	outdoorAmbientTemp = 15.0   // Celsius
 	indoorAmbientTemp  = 22.0   // Celsius
