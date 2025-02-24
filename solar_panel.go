@@ -3,12 +3,12 @@ package main
 
 type solarPanel struct {
 	fluidSystem
-
 	panelArea       float64
 	panelEfficiency float64
+	solarIrradiance float64
 }
 
-func (sp *solarPanel) initialize(fluidOutputs []IFluidSystem) {
+func (sp *solarPanel) initialize(fluidOutputs []IFluidSystem, flowRate float64) {
 	// include all the power components involved in this system
 	sp.heatInComponents = []IComponent{
 		heatAborptionComponent{
@@ -16,7 +16,7 @@ func (sp *solarPanel) initialize(fluidOutputs []IFluidSystem) {
 				name: "Incident Radiation",
 			},
 			efficiency:        sp.panelEfficiency,
-			incidentRadiation: func() float64 { return solarIrradiance },
+			incidentRadiation: func() float64 { return (*sp).solarIrradiance },
 			surfaceArea:       sp.panelArea,
 		},
 	}
@@ -24,6 +24,6 @@ func (sp *solarPanel) initialize(fluidOutputs []IFluidSystem) {
 	sp.heatOutComponents = []IComponent{}
 	sp.addEnvironmentalConvectionHeatLossComponent()
 	for _, output := range fluidOutputs {
-		sp.addOutputHeatFluidComponent(output, pumpFlowRatePerSecond)
+		sp.addOutputHeatFluidComponent(output, flowRate)
 	}
 }

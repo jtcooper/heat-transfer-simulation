@@ -10,66 +10,49 @@ import (
 )
 
 const (
-	// TODO: some values should be configurable
-	outdoorAmbientTemp = 15.0  // Celsius
-	indoorAmbientTemp  = 22.0  // Celsius
-	outdoorHTC         = 15.0  // W/m^2*K
-	indoorHTC          = 5.0   // W/m^2*K
-	initialPanelTemp   = 30.0  // Celsius
-	initialTankTemp    = 20.0  // Celsius
-	massPanelFluid     = 10.0  // kg
-	massTankFluid      = 250.0 // kg
-
-	// constants
-	solarIrradiance     = 1000.0  // W / m^2 ; varies with time of day
-	specificHeatWater   = 4186.0  // J/(kg*K)
-	flowRateCoefficient = 0.00286 // (kg/s) / m^2
-
 	float64EqualityThreshold = 1e-9
+	specificHeatWater        = 4186.0 // J/(kg*K)
 )
 
-var pumpFlowRatePerSecond = 0.0 // kg/s
-var simulationRuntime = 3600
-
 func main() {
-	fmt.Println("Starting simulation...")
-	panelSize := 2.0 // surface area: m^2
-	// pumpFlowRatePerSecond = flowRateCoefficient * panelSize
-	pumpFlowRatePerSecond = 0.5
+	config := initializeConfig()
 
 	sp := solarPanel{
 		fluidSystem: fluidSystem{
 			name: "SolarPanel",
-			// panel dimensions: 2m x 1m x 0.05m
-			// if the panel is roof-mounted, all sides except the back are exposed to convection
-			exposedSurfaceArea: 2.0*1.0 + 2*(2.0*0.05) + 2*(1.0*0.05),
-			ambientTemp:        outdoorAmbientTemp,
-			ambientHTC:         outdoorHTC,
-			fluidMass:          massPanelFluid,
-			temperature:        initialPanelTemp,
+			// for simplicity, we'll ignore panel depth and treat the panel as if it is mounted on the roof
+			exposedSurfaceArea: config.panelSize,
+			ambientTemp:        config.outdoorAmbientTemp,
+			ambientHTC:         config.outdoorHTC,
+			fluidMass:          config.panelFluidMass,
+			temperature:        config.panelTemp,
 		},
-		panelArea:       panelSize,
-		panelEfficiency: 0.60, // typically ranges from 50-70%
+		panelArea:       config.panelSize,
+		panelEfficiency: config.panelEfficiency,
+		solarIrradiance: config.solarIrradiance,
 	}
 
 	st := storageTank{
 		fluidSystem: fluidSystem{
 			name: "StorageTank",
+			// for simplicty, tank dimensions aren't configurable
 			// tank dimensions: 1.7m tall, 0.3m radius
-			// A = 2πrh + πr^2 ; the side on the ground is insulated
+			// A = 2πrh + πr^2 , where the side touching the ground is insulated
 			exposedSurfaceArea: 2*math.Pi*0.3*1.7 + math.Pi*math.Pow(0.3, 2),
-			ambientTemp:        indoorAmbientTemp,
-			ambientHTC:         indoorHTC,
-			fluidMass:          massTankFluid,
-			temperature:        initialTankTemp,
+			ambientTemp:        config.indoorAmbientTemp,
+			ambientHTC:         config.indoorHTC,
+			fluidMass:          config.tankFluidMass,
+			temperature:        config.tankTemp,
 		},
 	}
 
 	// initialize the systems: hook up system outputs and inputs
-	sp.initialize([]IFluidSystem{&st.fluidSystem})
-	st.initialize([]IFluidSystem{&sp.fluidSystem})
+	sp.initialize([]IFluidSystem{&st.fluidSystem}, config.pumpFlowRate)
+	st.initialize([]IFluidSystem{&sp.fluidSystem}, config.pumpFlowRate)
 
 	systems := []ISystem{&sp, &st}
+	totalTime := config.durationHours * 60 * 60
+	simulationRuntime := int(totalTime)
 
 	// setup plot arrays
 	timeSeries := make([]float64, 0, simulationRuntime)
@@ -79,8 +62,8 @@ func main() {
 	}
 
 	// run the simulation
-	timeStep := 1.0                         // seconds
-	totalTime := float64(simulationRuntime) // 1 hour
+	fmt.Println("Starting simulation...")
+	timeStep := 1.0 // seconds
 	for t := 0.0; t < totalTime+float64EqualityThreshold; t += timeStep {
 		timeSeries = append(timeSeries, t)
 		for _, sys := range systems {
@@ -97,6 +80,10 @@ func main() {
 
 	// plot the temperature results
 	line := charts.NewLine()
+	line.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
+		Title:    "Temperature",
+		Subtitle: "Solar Panel temperature vs. Storage Tank temperature over time",
+	}))
 	line.SetXAxis(timeSeries)
 	for name, series := range systemsSeries {
 		line.AddSeries(name, series)
@@ -106,6 +93,9 @@ func main() {
 	// plot the results for each system's power values
 	for _, sys := range systems {
 		sysLine := charts.NewLine()
+		sysLine.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
+			Title: sys.getName(),
+		}))
 		sysLine.SetXAxis(timeSeries)
 		for name, sysSeries := range sys.getData() {
 			sysLine.AddSeries(name, *sysSeries)
@@ -118,7 +108,7 @@ func main() {
 
 func plotLine(line *charts.Line, fileName string) {
 	// render to an HTML file
-	f, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0644)
+	f, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		panic(err)
 	}
